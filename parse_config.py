@@ -126,11 +126,14 @@ class ConfigParser:
     def log_dir(self):
         return self._log_dir
 
+    @property
+    def log_dir(self):
+        return self._log_dir
+
     def update_config(self, parameter):
 
         for key, value in parameter.items():
             _set_by_path(self.config, key, value)
-
 
         self._save_dir = self.base_save_dir / 'models' / self.exper_name / 'SearchResult'
         self._log_dir = self.base_save_dir / 'log' / self.exper_name / 'SearchResult'
@@ -211,7 +214,7 @@ class MockConfigParser:
         self.search_mode = "disable"
         self.gradient_accumulation_steps = self.config['trainer']['gradient_accumulation_steps']
 
-        if self.config.search_mode != 'disable':
+        if self.search_mode != 'disable':
             self.config['trainer']['tensorboardX'] = False
 
         if self.debug_mode:

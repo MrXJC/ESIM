@@ -1,7 +1,5 @@
 import argparse
-import data_loader.data_loaders as module_data
 import data_loader.processor as module_processor
-from pytorch_pretrained_bert.modeling import BertConfig
 import model.model as module_arch
 from parse_config import ConfigParser
 from agent import Agent

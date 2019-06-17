@@ -6,8 +6,8 @@ from utils.tokenizer import Segment_jieba
 from utils.vocab import Vocab
 from utils.w2v import Embedding
 from utils import load_from_pickle, dump_to_pickle
-from pytorch_pretrained_bert.tokenization import BertTokenizer
 from abc import abstractmethod
+
 
 class BaseProcessor:
     def __init__(self, logger, config, data_name, data_path, embed_path = None, user_dict = None, vocab_path = None, stop_word=None, max_len = 50, query_max_len=20,
@@ -89,7 +89,7 @@ class BaseProcessor:
             return
         print(f"Begin to build eval dataset")
         if os.path.exists(filename):
-            features = self.handle_from_file(
+            features, _ = self.handle_from_file(
                 filename)
             with open(str(self._data_dir / 'eval.pkl'), "wb") as f:
                 pickle.dump(features, f)
@@ -112,8 +112,8 @@ class BaseProcessor:
                 features['label'].append(_label)
 
                 if idx % 10000 == 0:
-                    self.logger.debug(idx, _query[:30], _target[:30], _label)
-                    self.logger.debug(self._vocab.convert_ids_to_tokens(_query[:30]), "/n", self._vocab.convert_ids_to_tokens(_target[:30]))
+                    print(idx, _query[:30], _target[:30], _label)
+                    print(self._vocab.convert_ids_to_tokens(_query[:30]), "\n", self._vocab.convert_ids_to_tokens(_target[:30]))
 
         return features, idx - self.skip_row + 1
 

@@ -4,7 +4,6 @@ import data_loader.processor as module_processor
 from parse_config import ConfigParser
 import model.model as module_arch
 from agent import Agent
-from pytorch_pretrained_bert.modeling import BertConfig
 
 
 def test(config):
