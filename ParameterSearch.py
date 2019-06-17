@@ -92,16 +92,14 @@ if __name__ == '__main__':
     config = ConfigParser(args)
     # config = MockConfigParser()
     parameter_dict = OrderedDict()
-    parameter_dict[('optimizer', 'args', 'lr')] = [2e-3, 1e-3, 5e-4, 1e-4, 5e-5]
-    parameter_dict[('data_loader', 'args', 'batch_size')] = [16, 32, 48, 64, 96]
-
+    parameter_dict[('optimizer', 'args', 'lr')] = [1e-5, 5e-5, 1e-4, 5e-4, 7.5e-4, 1e-3, 1e-2]
+    parameter_dict[('optimizer', 'args', 'weight_decay')] = [1e-2, 1e-3, 1e-4, 1e-5]
+    parameter_dict[('data_loader', 'args', 'batch_size')] = [16, 32, 64, 128, 256, 512, 1024, 2048]
     # random_search(config, parameter_dict, 2)
     # grid_search(config, parameter_dict)
-
-    args = args.parse_args()
-    if args.searchMode == 'random':
-        random_search(config, parameter_dict, 10)
-    elif args.searchMode == 'grid':
+    if config.search_mode == 'random':
+        random_search(config, parameter_dict, 100)
+    elif config.search_mode == 'grid':
         grid_search(config, parameter_dict)
     else:
-        print(f"{args.searchMode} is the unknown mode of ParameterSearch ")
+        print(f"{config.search_mode} is the unknown mode of ParameterSearch ")

@@ -14,11 +14,11 @@ def test(config):
     test_data_loader = config.initialize('data_loader', module_data, processor.data_dir, mode="test", debug=config.debug_mode)
 
     # build model architecture, then print to console
-    if config.bert_config_path:
-        bert_config = BertConfig(config.bert_config_path)
-        model = config.initialize('arch', module_arch, config=bert_config, num_labels=processor.nums_label())
-    else:
-        model = config.initialize_bert_model('arch', module_arch, num_labels=processor.nums_label())
+    model = config.initialize(
+        'arch',
+        module_arch,
+        vocab_size=processor.vocab_size,num_labels = processor.nums_label())
+
     logger.info(model)
     agent = Agent(model, config=config, test_data_loader=test_data_loader)
     return agent.test()

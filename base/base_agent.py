@@ -4,6 +4,7 @@ from abc import abstractmethod
 from numpy import inf
 from logger import WriterTensorboardX
 
+
 class BaseAgent:
     """
     Base class for all trainers
@@ -45,7 +46,6 @@ class BaseAgent:
         # setup visualization writer instance
         self.writer = WriterTensorboardX(config.log_dir, self.logger, cfg_trainer['tensorboardX'])
 
-
     @abstractmethod
     def _train_epoch(self, epoch):
         """
@@ -61,8 +61,9 @@ class BaseAgent:
         """
 
         self.config.save()
-        with open(str(self.checkpoint_dir / 'BertConfig.json'), 'w') as f:
-            f.write(self.model.config.to_json_string())
+
+        # with open(str(self.checkpoint_dir / 'BertConfig.json'), 'w') as f:
+        #     f.write(self.model.config.to_json_string())
 
         not_improved_count = 0
         for epoch in range(self.start_epoch, self.epochs + 1):
@@ -94,6 +95,9 @@ class BaseAgent:
                     # check whether model performance improved or not, according to specified metric(mnt_metric)
                     improved = (self.mnt_mode == 'min' and log[self.mnt_metric] <= self.mnt_best) or \
                                (self.mnt_mode == 'max' and log[self.mnt_metric] >= self.mnt_best)
+
+                    improved = improved and (log[self.mnt_metric] > 1e-6)
+
                 except KeyError:
                     self.logger.warning("Warning: Metric '{}' is not found. "
                                         "Model performance monitoring is disabled.".format(self.mnt_metric))
@@ -113,7 +117,7 @@ class BaseAgent:
                                      "Training stops.".format(self.early_stop))
                     break
 
-            #if epoch % self.save_period == 0:
+            #if epoch % self.save_period == 0 and False:
             self._save_checkpoint(epoch, save_best=best)
 
     def _prepare_device(self, n_gpu_use):
@@ -151,7 +155,8 @@ class BaseAgent:
             'config': self.config
         }
         filename = str(self.checkpoint_dir / 'checkpoint-epoch-now.pth')
-        torch.save(state, filename)
+        if self.config.search_mode == 'disable':
+            torch.save(state, filename)
 
         # if epoch % self.save_period == 0:
         #     filename = str(self.checkpoint_dir / 'checkpoint-epoch-{}.pth').format(epoch)
@@ -193,7 +198,8 @@ class BaseAgent:
         else:
             self.optimizer.load_state_dict(checkpoint['optimizer'])
 
-    def _get_pretty_time(self, start_time, end_time, epoch=1):
+    @staticmethod
+    def _get_pretty_time(start_time, end_time, epoch=1):
         seconds = end_time - start_time
         m, s = divmod(seconds*epoch, 60)
         h, m = divmod(m, 60)

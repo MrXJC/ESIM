@@ -38,19 +38,20 @@ class Dataset:
     def __init__(self, filename, debug):
         if os.path.exists(filename):
             with open(filename, 'rb') as f:
-                (self.query, self.target, self.labels) = pickle.load(f)
+                features = pickle.load(f)
+
+            self.query, self.target, self.label = features['query'], features['target'], features['label']
             if debug:
-                self.query, self.target, self.labels = self.query[
-                    :DEBUG_INDEX], self.target[:DEBUG_INDEX], self.labels[:DEBUG_INDEX]
+                self.query, self.target, self.label = self.query[:DEBUG_INDEX], self.target[:DEBUG_INDEX], self.label[:DEBUG_INDEX]
         else:
             raise FileNotFoundError(f"train data file not found in {filename}")
 
     def batch(self, index):
-        return self.query[index], self.target[index], self.labels[index]
+        return self.query[index], self.target[index], self.label[index]
 
     def __getitem__(self, index):
-        s1_data, s2_data, s_labels = self.query[index], self.target[index], self.labels[index]
-        return torch.LongTensor(s1_data), torch.LongTensor(s2_data), torch.LongTensor([s_labels])
+        query, target, label = self.query[index], self.target[index], self.label[index]
+        return torch.LongTensor(query), torch.LongTensor(target), torch.LongTensor([label])
 
     def __len__(self):
-        return len(self.labels)
+        return len(self.label)

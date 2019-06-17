@@ -6,7 +6,6 @@ import agent.loss as module_loss
 import agent.metric as module_metric
 from agent.optimizer import bert_optimizer
 
-
 class Agent(BaseAgent):
     """
     Trainer class
@@ -15,7 +14,7 @@ class Agent(BaseAgent):
         Inherited from BaseTrainer.
     """
     def __init__(self, model, config=None,
-                 data_loader =None, valid_data_loader=None, test_data_loader=None, lr_scheduler=None):
+                 data_loader =None, valid_data_loader=None, test_data_loader=None):
         super().__init__(model, config)
         self.config = config
         self.data_loader = data_loader
@@ -24,7 +23,7 @@ class Agent(BaseAgent):
         self.do_train = self.data_loader is not None
         self.do_validation = self.valid_data_loader is not None
         self.do_test = self.test_data_loader is not None
-        self.lr_scheduler = lr_scheduler
+
         # # get function handles of loss and metric
 
         self.loss = self.config.initialize('loss', module_loss, device=self.device)
@@ -32,7 +31,10 @@ class Agent(BaseAgent):
 
         if self.do_train:
             self.log_step = int(np.sqrt(data_loader.batch_size))
-            self.optimizer = bert_optimizer(model, config, data_loader)
+            trainable_params = filter(lambda p: p.requires_grad, model.parameters())
+            self.optimizer = config.initialize('optimizer', torch.optim, trainable_params)
+            self.lr_scheduler = config.initialize('lr_scheduler', torch.optim.lr_scheduler, self.optimizer)
+            #bert_optimizer(model, config, data_loader)
 
         if config.resume is not None:
             self.best_path = config.resume
@@ -98,7 +100,7 @@ class Agent(BaseAgent):
                     batch_idx * self.data_loader.batch_size,
                     self.data_loader.n_samples,
                     100.0 * batch_idx / len(self.data_loader),
-                    loss.item(), metric_str, ' lr: {}'.format(self.optimizer.get_lr()[0])))
+                    loss.item(), metric_str, ' lr: {}'.format(self.lr_scheduler.get_lr()[0])))
                 #self.writer.add_image('input', make_grid(data.cpu(), nrow=8, normalize=True))
 
         log = {
@@ -189,13 +191,13 @@ class Agent(BaseAgent):
 
     def _predict(self, batch):
         batch = tuple(t.to(self.device) for t in batch)
-        input_ids, input_mask, segment_ids, label_ids = batch
-        output = self.model(input_ids, input_mask, segment_ids)
-        label_ids = label_ids.view(-1)
+        q, t, label = batch
+        output = self.model(q, t)
+        label_ids = label.view(-1)
         return output, label_ids
 
     def predict(self, batchs):
         batch = tuple(torch.LongTensor(t).to(self.device) for t in batchs)
-        input_ids, input_mask, segment_ids, _ = batch
-        outputs = self.model(input_ids, input_mask, segment_ids)
+        q,t, _ = batch
+        outputs = self.model(q, t)
         return outputs, np.argmax(outputs.detach().cpu().numpy(), axis=1)

@@ -57,9 +57,13 @@ class ConfigParser:
 
         self.debug_mode = args.debug if "debug" in args else False
         self.all = args.all if "all" in args else False
-        self.reset = args.reset if "all" in args else False
+        self.reset = args.reset if "reset" in args else False
+        self.search_mode = args.searchMode if "searchMode" in args else "disable"
 
         self.gradient_accumulation_steps = self.config['trainer']['gradient_accumulation_steps']
+
+        if self.search_mode != 'disable':
+            self.config['trainer']['tensorboardX'] = False
 
         if self.all:
             self.config["data_loader"]["args"]["validation_split"] = 0.0
@@ -204,7 +208,11 @@ class MockConfigParser:
         self.debug_mode = True
         self.all = False
         self.reset = False
+        self.search_mode = "disable"
         self.gradient_accumulation_steps = self.config['trainer']['gradient_accumulation_steps']
+
+        if self.config.search_mode != 'disable':
+            self.config['trainer']['tensorboardX'] = False
 
         if self.debug_mode:
             self.config["trainer"]["epochs"] = 2
@@ -265,7 +273,6 @@ class MockConfigParser:
 
         for key, value in parameter.items():
             _set_by_path(self.config, key, value)
-
 
         self._save_dir = self.base_save_dir / 'models' / self.exper_name / 'SearchResult'
         self._log_dir = self.base_save_dir / 'log' / self.exper_name / 'SearchResult'

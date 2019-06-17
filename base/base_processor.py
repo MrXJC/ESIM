@@ -2,16 +2,17 @@ import os
 import pickle
 from pathlib import Path
 import numpy as np
-# from utils.tokenizer import Segment_jieba
-# from utils.vocab import Vocab
-# from utils.w2v import Embedding
-# from utils import load_from_pickle, dump_to_pickle
+from utils.tokenizer import Segment_jieba
+from utils.vocab import Vocab
+from utils.w2v import Embedding
+from utils import load_from_pickle, dump_to_pickle
 from pytorch_pretrained_bert.tokenization import BertTokenizer
 from abc import abstractmethod
 
-class BaseBertProcessor:
-    def __init__(self, logger, config, data_name, data_path, bert_vocab_file, max_len = 50, query_max_len=20,
-                 target_max_len=20, do_lower_case = True, test_split=0.0, training=True):
+class BaseProcessor:
+    def __init__(self, logger, config, data_name, data_path, embed_path = None, user_dict = None, vocab_path = None, stop_word=None, max_len = 50, query_max_len=20,
+                 target_max_len=20, test_split=0.0, training=True):
+        self.logger = logger
         self.reset = config.reset
         self._data_dir = Path('data') / data_name
 
@@ -19,15 +20,27 @@ class BaseBertProcessor:
         self.target_max_len = target_max_len
         self.max_len = max_len
 
-        print(f"Begin to build tokenizer ")
-        self.tokenizer = BertTokenizer.from_pretrained(
-            bert_vocab_file, cache_dir="data/.cache", do_lower_case= do_lower_case)  # 分词器选择
+        if training:
+            embedding_path = self._data_dir / embed_path
+            print(embedding_path.absolute())
+            self._embedding = Embedding(str(embedding_path), logger=logger)
 
-        self.vocab_size = len(self.tokenizer.vocab)
-        print(f"Vocab size {self.vocab_size}")
+        print(f"Begin to build segment and ..... feature engnieer .... ngram .....")
+        self._segment = Segment_jieba(user_dict=str(self._data_dir / user_dict))
 
         if training:
+            print(f"Begin to build vocab")
+            self._vocab = Vocab(str(self._data_dir / 'RAW' / vocab_path), self._segment, self._embedding)
+            self.word2idx, self.idx2word = self._vocab.word2idx, self._vocab.idx2word
+            dump_to_pickle(str(self._data_dir / 'vocab.pkl'), (self.word2idx, self.idx2word), self.reset)
+        else:
+            print(f"load the vocab")
+            (self.word2idx, self.idx2word) = load_from_pickle(str(self._data_dir / 'vocab.pkl'))
+
+        self.vocab_size = len(self.word2idx)
+        if training:
             filename = str(self._data_dir / 'RAW' / data_path)
+            # train_test_split and exist
             self._get_train_and_test(filename, test_split)
 
     @abstractmethod
@@ -48,7 +61,7 @@ class BaseBertProcessor:
         print(f"Begin to build dataset")
         if os.path.exists(filename):
 
-            features, length = self.handle_from_file_bert(filename)
+            features, length = self.handle_from_file(filename)
             if test_split != 0.0 and test_split < 0.5:
                 idx_full = np.arange(length)
                 np.random.shuffle(idx_full)
@@ -76,12 +89,75 @@ class BaseBertProcessor:
             return
         print(f"Begin to build eval dataset")
         if os.path.exists(filename):
-            features = self.handle_from_file_bert(
+            features = self.handle_from_file(
                 filename)
             with open(str(self._data_dir / 'eval.pkl'), "wb") as f:
                 pickle.dump(features, f)
         else:
             raise FileNotFoundError(f" DataSet file not found in {filename}")
+
+    def handle_from_file(self, filename):
+        features = {
+            'query': [],
+            'target': [],
+            'label': []}
+        with open(filename, 'r') as fe:
+            for idx, line in enumerate(fe):
+                if idx < self.skip_row:
+                    continue
+                q, t, label = self.split_line(line)
+                _query, _target, _label = self.handle(q, t, label)
+                features['query'].append(_query)
+                features['target'].append(_target)
+                features['label'].append(_label)
+
+                if idx % 10000 == 0:
+                    self.logger.debug(idx, _query[:30], _target[:30], _label)
+                    self.logger.debug(self._vocab.convert_ids_to_tokens(_query[:30]), "/n", self._vocab.convert_ids_to_tokens(_target[:30]))
+
+        return features, idx - self.skip_row + 1
+
+    def handle_on_batch(self, qs, ts):
+        query, target, label = [], [], []
+        for q, t in zip(qs, ts):
+            _query, _target, _label = self.handle(q, t, 0)
+            query.append(_query)
+            target.append(_target)
+            label.append(_label)
+        return query, target, label
+
+    def handle(self, q, t, label):
+        query = [self.word2idx.get(qw, self.word2idx['UNK']) for qw in self._segment(q, ifremove=False)['tokens']]
+        target = [self.word2idx.get(tw, self.word2idx['UNK']) for tw in self._segment(t, ifremove=False)['tokens']]
+        query = self.pad2longest(query, self.query_max_len)
+        target = self.pad2longest(target, self.target_max_len)
+        label_map = {label: i for i, label in enumerate(self.get_labels())}
+        label = label_map[label]
+        return query, target, label
+    @staticmethod
+    def pad2longest(data_ids, max_len):
+        if isinstance(data_ids[0], list):
+            s_data = np.array([s[:max_len] + [0] * (max_len - len(s[:max_len])) for s in data_ids])
+
+        elif isinstance(data_ids[0], int):
+            s_data = np.array(data_ids[:max_len] + [0] * (max_len - len(data_ids[:max_len])))
+
+        else:
+            raise TypeError("list type is required")
+        return s_data
+
+    # setting read-only attributes
+    @property
+    def seg(self):
+        return self._segment
+
+    @property
+    def embedding(self):
+        return self._embedding
+
+    @property
+    def vocab(self):
+        return self._vocab
 
     # QA
     def handle_from_file_bert(self, filename):
