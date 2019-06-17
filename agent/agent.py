@@ -100,7 +100,7 @@ class Agent(BaseAgent):
                     batch_idx * self.data_loader.batch_size,
                     self.data_loader.n_samples,
                     100.0 * batch_idx / len(self.data_loader),
-                    loss.item(), metric_str, ' lr: {}'.format(self.lr_scheduler.get_lr()[0])))
+                    loss.item(), metric_str, ' lr: {:.6f}'.format(self.lr_scheduler.get_lr()[0])))
                 #self.writer.add_image('input', make_grid(data.cpu(), nrow=8, normalize=True))
 
         log = {
