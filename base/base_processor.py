@@ -118,21 +118,21 @@ class BaseProcessor:
         return features, idx - self.skip_row + 1
 
     def handle_on_batch(self, qs, ts):
-        query, target, label = [], [], []
+        query, target = [], []
         for q, t in zip(qs, ts):
-            _query, _target, _label = self.handle(q, t, 0)
+            _query, _target, _ = self.handle(q, t)
             query.append(_query)
             target.append(_target)
-            label.append(_label)
-        return query, target, label
+        return query, target
 
-    def handle(self, q, t, label):
+    def handle(self, q, t, label=None):
         query = [self.word2idx.get(qw, self.word2idx['UNK']) for qw in self._segment(q, ifremove=False)['tokens']]
         target = [self.word2idx.get(tw, self.word2idx['UNK']) for tw in self._segment(t, ifremove=False)['tokens']]
         query = self.pad2longest(query, self.query_max_len)
         target = self.pad2longest(target, self.target_max_len)
         label_map = {label: i for i, label in enumerate(self.get_labels())}
-        label = label_map[label]
+        if label:
+            label = label_map[label]
         return query, target, label
     @staticmethod
     def pad2longest(data_ids, max_len):

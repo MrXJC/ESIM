@@ -18,7 +18,7 @@ def predict(config, s1, s2):
     #logger.info(model)
     agent = Agent(model, config=config)
 
-    batch = processor.handle_bert_on_batch(s1, s2)
+    batch = processor.handle_on_batch(s1, s2)
     print(batch)
     print(agent.predict(batch))
 

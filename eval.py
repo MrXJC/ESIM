@@ -8,8 +8,10 @@ import pandas as pd
 import numpy as np
 import torch.nn as nn
 
+
 def eval(config, filename):
     logger = config.get_logger('test')
+
     # setup data_loader instances
     processor = config.initialize('processor', module_processor, logger, config)
     processor.get_eval(filename)

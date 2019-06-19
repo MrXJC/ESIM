@@ -40,6 +40,7 @@ class Agent(BaseAgent):
         if config.resume is not None:
             self.best_path = config.resume
             self._resume_checkpoint(config.resume)
+        self.model.eval()
 
     def _eval_metrics(self, outputs, labels):
         outputs = outputs.detach().cpu().numpy()
@@ -198,6 +199,6 @@ class Agent(BaseAgent):
 
     def predict(self, batchs):
         batch = tuple(torch.LongTensor(t).to(self.device) for t in batchs)
-        q,t, _ = batch
+        q, t = batch
         outputs = self.model(q, t)
-        return outputs, np.argmax(outputs.detach().cpu().numpy(), axis=1)
+        return outputs.detach().cpu().numpy(), np.argmax(outputs.detach().cpu().numpy(), axis=1)
