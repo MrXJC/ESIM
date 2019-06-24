@@ -19,7 +19,10 @@ class Embedding:
 
     def _load_vec(self):
         if os.path.exists(self.vec_path):
-            self.w2v = KeyedVectors.load(self.vec_path)
+            if os.path.splitext(self.vec_path)[-1] == ".model":
+                self.w2v = KeyedVectors.load(self.vec_path)
+            else:
+                self.w2v = KeyedVectors.load_word2vec_format(self.vec_path, binary=False)
             self.logger.info("Step One: load w2v file successful!")
         else:
             # self.logger.warning("Step X: the w2v file not exists ! ")

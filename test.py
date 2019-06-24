@@ -9,7 +9,7 @@ from agent import Agent
 def test(config):
     logger = config.get_logger('test')
     # setup data_loader instances
-    processor = config.initialize('processor', module_processor, logger, config)
+    processor = config.initialize('processor', module_processor, logger, config, training=False)
     test_data_loader = config.initialize('data_loader', module_data, processor.data_dir, mode="test", debug=config.debug_mode)
 
     # build model architecture, then print to console

@@ -92,13 +92,13 @@ if __name__ == '__main__':
     config = ConfigParser(args)
     # config = MockConfigParser()
     parameter_dict = OrderedDict()
-    parameter_dict[('optimizer', 'args', 'lr')] = [1e-5, 5e-5, 1e-4, 5e-4, 7.5e-4, 1e-3, 1e-2]
-    parameter_dict[('optimizer', 'args', 'weight_decay')] = [1e-2, 1e-3, 1e-4, 1e-5]
-    parameter_dict[('data_loader', 'args', 'batch_size')] = [16, 32, 64, 128, 256, 512, 1024, 2048]
+    parameter_dict[('optimizer', 'args', 'lr')] = [5e-5, 1e-4, 5e-4, 7.5e-4, 1e-3]
+    parameter_dict[('optimizer', 'args', 'weight_decay')] = [1e-2, 1e-3, 1e-4]
+    parameter_dict[('data_loader', 'args', 'batch_size')] = [32, 64, 128, 256, 512, 1024]
     # random_search(config, parameter_dict, 2)
     # grid_search(config, parameter_dict)
     if config.search_mode == 'random':
-        random_search(config, parameter_dict, 100)
+        random_search(config, parameter_dict, 50)
     elif config.search_mode == 'grid':
         grid_search(config, parameter_dict)
     else:

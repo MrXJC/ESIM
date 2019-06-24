@@ -113,7 +113,7 @@ class BaseProcessor:
 
                 if idx % 10000 == 0:
                     print(idx, _query[:30], _target[:30], _label)
-                    print(self._vocab.convert_ids_to_tokens(_query[:30]), "\n", self._vocab.convert_ids_to_tokens(_target[:30]))
+                    print(self.convert_ids_to_tokens(_query[:30]), "\n", self.convert_ids_to_tokens(_target[:30]))
 
         return features, idx - self.skip_row + 1
 
@@ -134,6 +134,7 @@ class BaseProcessor:
         if label:
             label = label_map[label]
         return query, target, label
+
     @staticmethod
     def pad2longest(data_ids, max_len):
         if isinstance(data_ids[0], list):
@@ -221,7 +222,7 @@ class BaseProcessor:
             tokens += tokens_b + ["[SEP]"]
             segment_ids += [1] * (len(tokens_b) + 1)
 
-        input_ids = self.tokenizer.convert_tokens_to_ids(tokens)  # 将词转化为对应词表中的id
+        input_ids = self.convert_tokens_to_ids(tokens)  # 将词转化为对应词表中的id
 
         # input_mask: 1 表示真正的真正的 tokens， 0 表示是 padding tokens
         input_mask = [1] * len(input_ids)
@@ -243,6 +244,12 @@ class BaseProcessor:
     def data_dir(self):
         return self._data_dir
 
+    def convert_ids_to_tokens(self, ids):
+        """Converts a sequence of ids in wordpiece tokens using the vocab."""
+        tokens = []
+        for i in ids:
+            tokens.append(self.idx2word[i])
+        return tokens
 
 def _truncate_seq_pair(tokens_a, tokens_b, max_length):
     """ 截断句子a和句子b，使得二者之和不超过 max_length """

@@ -5,7 +5,7 @@
         "type": "ATECProcessor",
         "args": {
             "data_name":  "ATEC",
-            "embed_path": "embedding/w2v.model",
+            "embed_path": "embedding/embed.txt",
             "user_dict":  "user_dict.txt",
             "vocab_path": "atec_nlp_sim_train.csv",
             "data_path":  "atec_nlp_sim_train.csv",
@@ -29,7 +29,7 @@
     "arch": {
         "type": "ESIM",
         "args": {
-            "embed_dim"    : 300,
+            "embed_dim"    : 200,
             "hidden_size"  : 100,
             "linear_size"  : 64,
             "dropout"      : 0.75
@@ -48,7 +48,7 @@
     "lr_scheduler": {
         "type": "StepLR",
         "args": {
-            "step_size": 5,
+            "step_size": 4,
             "gamma": 0.5
         }
     },

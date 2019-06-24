@@ -59,13 +59,6 @@ class Vocab:
                 self.add_word(token)
         self.add_word('UNK')  # unk index: len(word2idx)-1
 
-    def convert_ids_to_tokens(self, ids):
-        """Converts a sequence of ids in wordpiece tokens using the vocab."""
-        tokens = []
-        for i in ids:
-            tokens.append(self.idx2word[i])
-        return tokens
-
     def __len__(self):
         return len(self.idx2word)
 

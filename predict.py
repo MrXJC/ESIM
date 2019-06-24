@@ -7,7 +7,7 @@ from agent import Agent
 def predict(config, s1, s2):
     logger = config.get_logger('test')
     # setup data_loader instances
-    processor = config.initialize('processor', module_processor, logger, config)
+    processor = config.initialize('processor', module_processor, logger, config,  training=False)
     # build model architecture, then print to console
     # build model architecture, then print to console
     # build model architecture, then print to console

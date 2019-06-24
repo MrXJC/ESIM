@@ -177,7 +177,7 @@ class Agent(BaseAgent):
                 total_test_loss += loss.item()
                 total_test_metrics += self._eval_metrics(output, label_ids)
                 if detail:
-                    qs.extend(batch[0]), ts.extend(batch[1]), labels.extend(batch[2]), outputs.extend(F.softmax(output, dim=-1))
+                    qs.extend(batch[0]), ts.extend(batch[1]), labels.extend(batch[2].detach().cpu().numpy()), outputs.extend(F.softmax(output, dim=-1).detach().cpu().numpy())
 
         for key, value in {
             'test_loss': total_test_loss / len(self.test_data_loader),
