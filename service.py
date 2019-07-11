@@ -12,7 +12,7 @@ json = FlaskJSON(app)  # 初始化json处理器
 
 
 def predict(q, t):
-    batch = processor.handle_on_batch([q], [t])
+    batch = processor.handle_on_batch(q, t)
     return agent.predict(batch)
 
 
@@ -27,7 +27,7 @@ def test():  # 处理访问的函数
         _, label = predict(
             data['query'],
             data['target'])  # 从json数据里面读取text字段，生成返回
-        response = {'label': int(label[0])}
+        response = {'label': list(map(int, label))}
     except (KeyError, TypeError, ValueError):  # 捕获数据类型异常
         raise JsonError(description='Invalid value.')  # 将异常反馈会调用
     return response  # 正常返回，这个response的内容会被转成json格式
